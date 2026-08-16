@@ -1,0 +1,34 @@
+name: 同步上游iptv源仓库
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出本仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 设置git提交身份
+        run: |
+          git config --global user.name "github‑actions[bot]"
+          git config --global user.email "github‑actions[bot]@users.noreply.github.com"
+
+      - name: 绑定原作者仓库为上游
+        run: |
+          git remote add upstream https://github.com/best-fan/iptv-sources.git
+          git fetch upstream main
+
+      - name: 拉取合并上游全部更新
+        run: |
+          git merge upstream/main --allow-unrelated-histories -X theirs
+
+      - name: 提交推送回自己仓库
+        run: |
+          git add .
+          git commit -m "自动同步上游最新iptv文件" || echo "无新内容，跳过提交"
+          git push origin main
